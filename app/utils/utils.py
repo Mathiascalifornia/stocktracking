@@ -134,7 +134,7 @@ class Utils:
 
 
     @staticmethod
-    def _load_image_as_bytes(image_path:str) -> bytes:
+    def load_image_as_bytes(image_path:str) -> bytes:
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read())
 

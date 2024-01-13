@@ -2,10 +2,10 @@
 import os
 from threading import Timer
 import warnings
-import base64
 import logging
-from typing import List
+from typing import List , Iterable
 import pandas as pd
+import webbrowser
 
 import numpy as np
 import plotly.graph_objects as go
@@ -31,29 +31,34 @@ from utils.viz import Viz
 
 class App:
 
-    utils = Utils()
-    viz = Viz()
+    utils = Utils() # All utils functions
+    viz = Viz() # All data viz related functions
 
+    # Add tickers if you want them to be displayed by default (with the clean name as key and the actual ticker as value)
     tickers_to_fetch_by_default = {"SP500" : '^GSPC' , 
                                    "EUR:USD":'EURUSD=X'}
 
+    # The bear and bull that will be displayed on the first screen
     ressource_path = os.path.join(os.path.dirname(os.path.dirname(__file__)) , "ressources")
     bear_path = os.path.join(ressource_path , "bear.jpg")
     bull_path = os.path.join(ressource_path ,  "bull.jpg")
 
     def __init__(self):
 
+        self.to_add_by_default_data:List[pd.DataFrame]
         self.to_add_by_default_data = App.utils.get_data(tickers=App.tickers_to_fetch_by_default.values())
 
-        self.bear = App.utils._load_image_as_bytes(App.bear_path)
-        self.bull = App.utils._load_image_as_bytes(App.bull_path)
+        self.bear:bytes 
+        self.bull:bytes 
+        self.bear = App.utils.load_image_as_bytes(App.bear_path)
+        self.bull = App.utils.load_image_as_bytes(App.bull_path)
 
 
         self.ticker_df_dict = {} 
         self.ticker_pct_change = {}
         self.current_ticker = 'SP500'
 
-
+        self.server:Flask
         self.server = App.utils._load_server()
         self.app = dash.Dash(__name__, server=self.server)
 
@@ -61,6 +66,7 @@ class App:
         ########## Dashboard ##########
         self.app.layout = html.Div([
             dcc.Tabs(id='tabs', value='tab-1', children=[
+                 
                 dcc.Tab(label='Input', value='tab-1', children=[
             
                     html.Div([
@@ -78,6 +84,7 @@ class App:
                             html.Button('START', id='submit-ticker', n_clicks=0, style={'width': '96%'})
                         ], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'}),
                         html.Img(src="data:image/png;base64,{}".format(self.bear.decode()), style={"height": "200px", "margin-left": "auto"})
+                    
                     ], style={
                         "display": "flex",
                         "flex-direction": "row",
@@ -88,8 +95,10 @@ class App:
                         "margin-bottom": "100px"
                     })
                 ]),
+
                 dcc.Tab(label='Output', value='tab-2', children=[
                     html.Div(id='output')
+
                 ])
             ])
         ])
@@ -107,7 +116,7 @@ class App:
 
                 tickers:list = input_value.upper().split()
 
-                if tickers != []:
+                if tickers:
                     
                     liste_stocks = App.utils.get_data(tickers=tickers)
                     tickers.extend(list(App.tickers_to_fetch_by_default)[::-1]) # Reverse the list to make the SP500 always appear first
@@ -132,9 +141,17 @@ class App:
                     self.ticker_df_dict = ticker_df_dict
                     self.ticker_pct_change = ticker_pct_change
                     
-                    return main(tickers , pct_change_list , 
+                    return App.main(tickers , pct_change_list , 
                                 self.to_add_by_default_data[0] , # SP500 will always be the first element
-                                liste_stocks )
+                                liste_stocks)
+                
+                if not tickers:
+
+                    return html.Div(
+                                html.H2("You need to provide at least one valid ticker. Refer to the yahoo finance site for the available tickers"),
+                                style={'text-align': 'center'}
+                                    )
+                     
 
 
         # For the pct changes
@@ -218,130 +235,130 @@ class App:
                     return f'Changes in percentage for {input_ticker} :' 
 
 
+    @staticmethod
+    def main(tickers:Iterable , pct_change_list:Iterable ,
+             sp500:pd.DataFrame , liste_stocks:Iterable) -> html.Div:
 
+        liste_stock_overall = App.utils.minmax_scale(365*47 , liste_stocks)
+        liste_two_week = App.utils.minmax_scale(14 , liste_stocks)
+        liste_six_month = App.utils.minmax_scale(30*6 , liste_stocks)
+        liste_one_year = App.utils.minmax_scale(365 , liste_stocks)
+        liste_five_year = App.utils.minmax_scale(365*5 , liste_stocks)
+
+
+
+        # Function to add the traces
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(y=liste_stock_overall[-1]['normalized'] , hovertext=liste_stock_overall[-1]['Adj Close'].apply(lambda x : str(f'Price : {np.round(x,2)}')), x=liste_stock_overall[-1].index , name=tickers[-1]  , mode='lines' , visible=True))
+        for i in range(len(liste_stocks) -1):
+            fig.add_trace(go.Scatter(y=liste_stock_overall[i]['normalized'] , hovertext=liste_stock_overall[i]['Adj Close'].apply(lambda x : str(f'Price : {np.round(x,2)}')), x=liste_stock_overall[i].index , name=tickers[i] , mode='lines', visible='legendonly'))
+
+
+        # Add the traces
+        App.viz.add_a_trace(liste_two_week , fig=fig , tickers=tickers)
+        App.viz.add_a_trace(liste_six_month , fig=fig , tickers=tickers)
+        App.viz.add_a_trace(liste_one_year , fig=fig , tickers=tickers)
+        App.viz.add_a_trace(liste_five_year , fig=fig , tickers=tickers)
+
+
+        liste1 = [*['legendonly' for i in range(len(tickers) - 1)] , True  , *[False for i in range(len(tickers)*4)]]
+        liste2 = [*[False for i in range(len(tickers))] , *['legendonly' for i in range(len(tickers) - 1)] , True , *[False for i in range(len(tickers)*3)]]
+        liste3 = [*[False for i in range(len(tickers)*2)] , *['legendonly' for i in range(len(tickers) - 1)] , True ,  *[False for i in range(len(tickers)*2)]]
+        liste4 = [*[False for i in range(len(tickers)*3)] , *['legendonly' for i in range(len(tickers) - 1)] , True , *[False for i in range(len(tickers))]]
+        liste5 = [*[False for i in range(len(tickers)*4)] , *['legendonly' for i in range(len(tickers) - 1)] , True]
+
+        # Create the buttons
+        dropdown_buttons = [
+        {'label': "ALL", 'method': "update", 'args': [{"visible": liste1} , {'title' : 'Overall normalized stock prices'}] },
+        {'label': "2WTD", 'method': "update", 'args': [{"visible": liste2} , {'title' : 'Two weeks normalized stock prices'}]},
+        {'label': "6MTD", 'method': "update", 'args': [{"visible": liste3} , {'title' : 'Six months normalized stock prices'}]},
+        {'label': "1YTD", 'method': "update", 'args': [{"visible": liste4} , {'title' : 'One year normalized stock prices'}]},
+        {'label': "5YTD", 'method': "update", 'args': [{"visible":liste5} , {'title' : 'Five years normalized stock prices'}]}
+        ]
+
+        # Update the figure to add dropdown menu
+        fig.update_layout({
+                'updatemenus': [
+                    {'type': "dropdown",
+                    'showactive': True,'active': 0, 'buttons' : dropdown_buttons},
+                ]})
+
+        # To see all the prices 
+        fig.update_layout(hovermode = 'x unified')
+
+        # The figsize
+        fig.update_layout(autosize=False , width=1450 , height=500)
+
+        # The title
+        fig.update_layout(
+            title={
+                'text': "Share price over time",
+                'y':0.9,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'})
+
+
+        # First div
+        app.layout = html.Div(id='Price' , children=[
+            
+        # Main title
+        html.H1(children=['---------------------------------------------------------  Stocks tracking  ---------------------------------------------------------'] , style={'border' : '1px solid black'}),
+
+        # Main graph
+        dcc.Graph(figure=fig),
+
+        # Fear and greed index
+        dcc.Graph(id='f&g' , figure=App.viz.plot_fear_and_greed()),
+
+        # Add the dropdown for the rsi and plain text (dropdown to the left , plain text to the right , rsi below)
+        dcc.Dropdown(id='first_dropdown',
+        options= [{'label' : tick , 'value' : tick} for tick in tickers] , value=tickers[-1]),
+
+
+        html.Br(), # Jump a line
+
+        # Title for the percentages change
+        html.H3(children = ['Changes in percentage for SP500 :'] , id='title_percentage') ,
+
+        html.Br(), # Jump a line 
+
+
+        # Plain text
+        html.I(children=[App.utils.display_pct_changes(pct_change_list[-1])] , style={'border':'1px solid black'} , id='pct_changes'),
+
+
+        html.Br(),
+        html.Br(),
+
+        # Title for the RSI fig
+        html.H3(children=[f'RSI , Bollinger bands , ADX , MACD , trading volume and analysis of seasonality for SP500 :'] , id='title'),
+
+        # Figures
+        dcc.Graph(id='RSI' , figure=App.viz.plot_rsi(sp500)),
+        dcc.Graph(id='bbands' , figure=App.viz.bbands(sp500)),
+        dcc.Graph(id='adx' , figure=App.viz.plot_candle_adx(sp500)),
+        dcc.Graph(id='macd' , figure=App.viz.plot_macd(sp500)),
+        dcc.Graph(id='volume' , figure=App.viz.plot_volume(sp500)),
+        dcc.Graph(id='seasonal' , figure=App.viz.get_the_three_season(df=sp500)),
+
+        ] , style={'text-align' : 'center'})
+
+
+        return app.layout 
+    
     def run(self):
-        def open_browser():
-            import webbrowser
+        """ 
+        This method launch directly the app ,
+        without having to copy/paste the link from the terminal
+        """
+        def __open_browser():
             if not os.environ.get("WERKZEUG_RUN_MAIN"):
                 webbrowser.open_new('http://127.0.0.1:8050/')
 
         if __name__ == "__main__":
-            Timer(1, open_browser).start()
+            Timer(1, __open_browser).start()
             self.app.run_server()
-
-
-
-def main(tickers , pct_change_list , sp500 , liste_stocks):
-
-    liste_stock_overall = App.utils.minmax_scale(365*47 , liste_stocks)
-    liste_two_week = App.utils.minmax_scale(14 , liste_stocks)
-    liste_six_month = App.utils.minmax_scale(30*6 , liste_stocks)
-    liste_one_year = App.utils.minmax_scale(365 , liste_stocks)
-    liste_five_year = App.utils.minmax_scale(365*5 , liste_stocks)
-
-
-
-    # Function to add the traces
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(y=liste_stock_overall[-1]['normalized'] , hovertext=liste_stock_overall[-1]['Adj Close'].apply(lambda x : str(f'Price : {np.round(x,2)}')), x=liste_stock_overall[-1].index , name=tickers[-1]  , mode='lines' , visible=True))
-    for i in range(len(liste_stocks) -1):
-        fig.add_trace(go.Scatter(y=liste_stock_overall[i]['normalized'] , hovertext=liste_stock_overall[i]['Adj Close'].apply(lambda x : str(f'Price : {np.round(x,2)}')), x=liste_stock_overall[i].index , name=tickers[i] , mode='lines', visible='legendonly'))
-
-
-    # Add the traces
-    App.viz.add_a_trace(liste_two_week , fig=fig , tickers=tickers)
-    App.viz.add_a_trace(liste_six_month , fig=fig , tickers=tickers)
-    App.viz.add_a_trace(liste_one_year , fig=fig , tickers=tickers)
-    App.viz.add_a_trace(liste_five_year , fig=fig , tickers=tickers)
-
-
-    liste1 = [*['legendonly' for i in range(len(tickers) - 1)] , True  , *[False for i in range(len(tickers)*4)]]
-    liste2 = [*[False for i in range(len(tickers))] , *['legendonly' for i in range(len(tickers) - 1)] , True , *[False for i in range(len(tickers)*3)]]
-    liste3 = [*[False for i in range(len(tickers)*2)] , *['legendonly' for i in range(len(tickers) - 1)] , True ,  *[False for i in range(len(tickers)*2)]]
-    liste4 = [*[False for i in range(len(tickers)*3)] , *['legendonly' for i in range(len(tickers) - 1)] , True , *[False for i in range(len(tickers))]]
-    liste5 = [*[False for i in range(len(tickers)*4)] , *['legendonly' for i in range(len(tickers) - 1)] , True]
-
-    # Create the buttons
-    dropdown_buttons = [
-    {'label': "ALL", 'method': "update", 'args': [{"visible": liste1} , {'title' : 'Overall normalized stock prices'}] },
-    {'label': "2WTD", 'method': "update", 'args': [{"visible": liste2} , {'title' : 'Two weeks normalized stock prices'}]},
-    {'label': "6MTD", 'method': "update", 'args': [{"visible": liste3} , {'title' : 'Six months normalized stock prices'}]},
-    {'label': "1YTD", 'method': "update", 'args': [{"visible": liste4} , {'title' : 'One year normalized stock prices'}]},
-    {'label': "5YTD", 'method': "update", 'args': [{"visible":liste5} , {'title' : 'Five years normalized stock prices'}]}
-    ]
-
-    # Update the figure to add dropdown menu
-    fig.update_layout({
-            'updatemenus': [
-                {'type': "dropdown",
-                'showactive': True,'active': 0, 'buttons' : dropdown_buttons},
-            ]})
-
-    # To see all the prices 
-    fig.update_layout(hovermode = 'x unified')
-
-    # The figsize
-    fig.update_layout(autosize=False , width=1450 , height=500)
-
-    # The title
-    fig.update_layout(
-        title={
-            'text': "Share price over time",
-            'y':0.9,
-            'x':0.5,
-            'xanchor': 'center',
-            'yanchor': 'top'})
-
-
-
-
-    # First div
-    app.layout = html.Div(id='Price' , children=[
-         
-    # Main title
-    html.H1(children=['---------------------------------------------------------  Stocks tracking  ---------------------------------------------------------'] , style={'border' : '1px solid black'}),
-
-    # Main graph
-    dcc.Graph(figure=fig),
-
-    # Fear and greed index
-    dcc.Graph(id='f&g' , figure=App.viz.plot_fear_and_greed()),
-
-    # Add the dropdown for the rsi and plain text (dropdown to the left , plain text to the right , rsi below)
-    dcc.Dropdown(id='first_dropdown',
-    options= [{'label' : tick , 'value' : tick} for tick in tickers] , value=tickers[-1]),
-
-
-    html.Br(), # Jump a line
-
-    # Title for the percentages change
-    html.H3(children = ['Changes in percentage for SP500 :'] , id='title_percentage') ,
-
-    html.Br(), # Jump a line 
-
-
-    # Plain text
-    html.I(children=[App.utils.display_pct_changes(pct_change_list[-1])] , style={'border':'1px solid black'} , id='pct_changes'),
-
-
-    html.Br(),
-    html.Br(),
-
-    # Title for the RSI fig
-    html.H3(children=[f'RSI , Bollinger bands , ADX , MACD , trading volume and analysis of seasonality for SP500 :'] , id='title'),
-
-    # Figures
-    dcc.Graph(id='RSI' , figure=App.viz.plot_rsi(sp500)),
-    dcc.Graph(id='bbands' , figure=App.viz.bbands(sp500)),
-    dcc.Graph(id='adx' , figure=App.viz.plot_candle_adx(sp500)),
-    dcc.Graph(id='macd' , figure=App.viz.plot_macd(sp500)),
-    dcc.Graph(id='volume' , figure=App.viz.plot_volume(sp500)),
-    dcc.Graph(id='seasonal' , figure=App.viz.get_the_three_season(df=sp500)),
-
-    ] , style={'text-align' : 'center'})
-
-
-    return app.layout 
 
 
 ##### Launch the app #####
