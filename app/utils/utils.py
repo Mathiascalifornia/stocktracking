@@ -1,16 +1,14 @@
-import pandas as pd , numpy as np
-
-from dash import html 
-
 import datetime as dt 
-from statsmodels.tsa.seasonal import seasonal_decompose
+import base64
+import warnings
+from typing import Union , Iterable , List
+import os
+
+import pandas as pd , numpy as np
+from dash import html 
 from sklearn.preprocessing import MinMaxScaler
 from pandas_datareader import data
 import yfinance as yf
-import os
-import base64
-import warnings
-from typing import Union , Iterable
 warnings.filterwarnings('ignore')
 yf.pdr_override()
 
@@ -23,8 +21,9 @@ from flask import Flask
 
 
 class Utils:
+
     @staticmethod
-    def get_data(tickers : Iterable) -> list:
+    def get_data(tickers : Iterable) -> List[pd.DataFrame]:
         ''' 
         Get the data from yahoo finance , using the list of tickers
         '''
@@ -131,20 +130,6 @@ class Utils:
             return previous , diff
         except:
             return None
-    
-
-    @staticmethod
-    def prepare_for_decompose(df : pd.DataFrame) -> pd.DataFrame:
-        """ 
-        Prepare data for the "plot_seasonality" method
-        """
-        to_dec_yearly = df[df.index[-1] - dt.timedelta(252*7):] # for yearly
-        to_dec_yearly['month'] = to_dec_yearly.index.month_name()
-        decomposition_yearly = seasonal_decompose(to_dec_yearly['Adj Close'], model='additive', period=252)
-        to_plot_yearly = pd.DataFrame({'seasonal' : decomposition_yearly.seasonal.values , 'trend' : decomposition_yearly.trend.values ,
-                                    'month' : to_dec_yearly['month'] , 'date' : decomposition_yearly.seasonal.index ,
-                                    'observed' : decomposition_yearly.observed})
-        return to_plot_yearly
 
 
 

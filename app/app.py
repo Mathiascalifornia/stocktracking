@@ -3,8 +3,9 @@ import os
 from threading import Timer
 import warnings
 import base64
-import datetime as dt 
 import logging
+from typing import List
+import pandas as pd
 
 import numpy as np
 import plotly.graph_objects as go
@@ -15,7 +16,6 @@ from dash import html
 from dash.dependencies import Input, Output , State
 from flask import Flask  
 
-from pandas_datareader import data
 import yfinance as yf
 
 warnings.filterwarnings('ignore')
@@ -34,15 +34,19 @@ class App:
     utils = Utils()
     viz = Viz()
 
+    tickers_to_fetch_by_default = {"SP500" : '^GSPC' , 
+                                   "EUR:USD":'EURUSD=X'}
+
     ressource_path = os.path.join(os.path.dirname(os.path.dirname(__file__)) , "ressources")
     bear_path = os.path.join(ressource_path , "bear.jpg")
     bull_path = os.path.join(ressource_path ,  "bull.jpg")
 
     def __init__(self):
 
+        self.to_add_by_default_data = App.utils.get_data(tickers=App.tickers_to_fetch_by_default.values())
 
-        self.bear = App._load_image_as_bytes(App.bear_path)
-        self.bull = App._load_image_as_bytes(App.bull_path)
+        self.bear = App.utils._load_image_as_bytes(App.bear_path)
+        self.bull = App.utils._load_image_as_bytes(App.bull_path)
 
 
         self.ticker_df_dict = {} 
@@ -50,7 +54,7 @@ class App:
         self.current_ticker = 'SP500'
 
 
-        self.server = App._load_server()
+        self.server = App.utils._load_server()
         self.app = dash.Dash(__name__, server=self.server)
 
 
@@ -96,20 +100,26 @@ class App:
             Input('submit-ticker', 'n_clicks'),
             State('ticker-input', 'value')) # Allows to share data between elements
         def get_output(n_click , input_value):
+            
             if n_click is None:
                 raise dash.exceptions.PreventUpdate
             else:
-                tickers = input_value.upper().split()
+
+                tickers:list = input_value.upper().split()
 
                 if tickers != []:
                     
-                    sp500 = data.get_data_yahoo('^GSPC' , dt.datetime(1975,1,1))
                     liste_stocks = App.utils.get_data(tickers=tickers)
-                    tickers.append('SP500')
+                    tickers.extend(list(App.tickers_to_fetch_by_default)[::-1]) # Reverse the list to make the SP500 always appear first
 
                     ticker_pct_change = {}
                     ticker_df_dict = {}
-                    liste_stocks.append(sp500)
+
+                    self.to_add_by_default_data:List[pd.DataFrame]
+
+                    liste_stocks.extend(self.to_add_by_default_data[::-1]) # Reverse the list to make the SP500 always appear first
+
+
                     pct_change_list = [App.utils.get_pct_change(df) for df in liste_stocks]
                         
                     # To link the ticker and the dataframes
@@ -122,9 +132,9 @@ class App:
                     self.ticker_df_dict = ticker_df_dict
                     self.ticker_pct_change = ticker_pct_change
                     
-                    
-
-                    return main(tickers , pct_change_list , ticker_pct_change , sp500 , liste_stocks , ticker_df_dict)
+                    return main(tickers , pct_change_list , 
+                                self.to_add_by_default_data[0] , # SP500 will always be the first element
+                                liste_stocks )
 
 
         # For the pct changes
@@ -221,33 +231,7 @@ class App:
 
 
 
-
-    @staticmethod
-    def _load_image_as_bytes(image_path:str) -> bytes:
-        with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read())
-    
-    @staticmethod
-    def _load_server() -> Flask:
-        server = Flask(__name__)
-        server.config['SECRET_KEY'] = os.urandom(24)
-        server.config['SESSION_TYPE'] = 'filesystem'
-        server.config['SESSION_PERMANENT'] = False
-        return server
-
-
-    @staticmethod
-    def spaces(n=3) -> html.Div: 
-        """ 
-        To avoid repetition , create as many spaces as you specify in "n"
-        """
-        return html.Div([html.Br() for i in range(n)])
-
-
-
-def main(tickers , pct_change_list , ticker_pct_change , sp500 , liste_stocks , ticker_df_dict):
-
-
+def main(tickers , pct_change_list , sp500 , liste_stocks):
 
     liste_stock_overall = App.utils.minmax_scale(365*47 , liste_stocks)
     liste_two_week = App.utils.minmax_scale(14 , liste_stocks)
