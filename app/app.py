@@ -43,6 +43,22 @@ class App:
     bear_path = os.path.join(ressource_path , "bear.jpg")
     bull_path = os.path.join(ressource_path ,  "bull.jpg")
 
+
+    # The dictionnary of tickers for sectors benchmarks 
+    sector_compositions = {
+        'Energy': ('XOM', 'CVX', 'COP', 'OXY', 'PSX', 'TOT.TO', 'ENI.MI', 'HES', '0883.HK', 'RWE.DE' , 'EPD'), 
+        'Materials': ('ECL', 'APD', 'IP', 'SHW', 'NUE', 'FCX',  'RPM' , 'HCMLF' , 'HEI.DE' , 'CRH'), 
+        'Industrials': ('MMM', 'HON', 'RTX', 'GE', 'BA', 'CAT', 'EMR', 'SIE.DE' , 'ABBN.SW' , 'ATCO-A.ST' , 'ITW'), 
+        'Consumer Discretionary': ('VFC', 'NKE', 'HD', 'MCD', 'SBUX', 'ITX.MC', 'F', 'GM', 'BKNG', 'CCL' , 'LEG' , 'MC.PA' , 'CFR.SW'), 
+        'Consumer Staples': ('PG', 'NSRGF', 'UN', 'CL', 'KO', 'PEP', 'MDLZ', 'ADM', 'STZ', 'MO' , 'NESN.SW' , 'DGE.L' , 'BN.PA'), 
+        'Health Care': ('JNJ', 'PFE', 'UNH', 'MRK', 'ABBV', 'GILD', 'BMY', 'AMGN', 'SYK', 'TMO' , 'NOVN.SW' , 'AZN' , 'SAN.PA'), 
+        'Financials': ('JPM', 'BAC', 'WFC', 'GS', 'MS', 'AXP', 'BLK', 'MET', 'PNC' , 'HSBA.L' , 'UBSG.SW' , 'TD.TO'), 
+        'Information Technology': ('MSFT', 'AAPL', 'GOOGL', 'AMZN', 'FB', 'TSLA', 'V', 'NVDA', 'INTC', 'CSCO' , 'IBM' , '005930.KS' , 'TSM'), 
+        'Communication Services': ('VZ', 'T', 'CMCSA', 'DISCA', 'ATVI', 'NFLX', 'LUMN', 'FOXA', 'CHTR', 'VIAC' , '0941.HK' , 'DTE.DE' , 'TLS.AX'),
+        'Utilities': ('NEE', 'DUK', 'SO', 'D', 'EXC', 'SRE', 'AEP', 'XEL', 'PEG', 'ED' , 'FTS' , 'ENGI.PA' , 'EDP.LS'),
+        'Real Estate': ('SPG', 'EQIX', 'PLD', 'DLR', 'WELL', 'PSA', 'CBRE', 'BXP', 'AVB', 'CCI' , 'O' , 'VNA.DE' , 'BLND.L' , 'SCG.AX')
+    }
+
     def __init__(self):
 
         self.to_add_by_default_data:List[pd.DataFrame]
