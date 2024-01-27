@@ -47,7 +47,7 @@ class App:
     # The dictionnary of tickers for sectors benchmarks 
     sector_compositions = {
         'Energy': ('XOM', 'CVX', 'COP', 'OXY', 'PSX', 'TOT.TO', 'ENI.MI', 'HES', '0883.HK', 'RWE.DE' , 'EPD'), 
-        'Materials': ('ECL', 'APD', 'IP', 'SHW', 'NUE', 'FCX',  'RPM' , 'HCMLF' , 'HEI.DE' , 'CRH'), 
+        'Materials': ('ECL', 'APD', 'IP', 'SHW', 'NUE', 'FCX',  'RPM' , 'HCMLF' , 'HEI.DE' , 'CRH' , 'BHP.AX' , 'NHY.OL'), 
         'Industrials': ('MMM', 'HON', 'RTX', 'GE', 'BA', 'CAT', 'EMR', 'SIE.DE' , 'ABBN.SW' , 'ATCO-A.ST' , 'ITW'), 
         'Consumer Discretionary': ('VFC', 'NKE', 'HD', 'MCD', 'SBUX', 'ITX.MC', 'F', 'GM', 'BKNG', 'CCL' , 'LEG' , 'MC.PA' , 'CFR.SW'), 
         'Consumer Staples': ('PG', 'NSRGF', 'UN', 'CL', 'KO', 'PEP', 'MDLZ', 'ADM', 'STZ', 'MO' , 'NESN.SW' , 'DGE.L' , 'BN.PA'), 
