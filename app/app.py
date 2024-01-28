@@ -143,8 +143,9 @@ class App:
                 if tickers:
                     
                     liste_stocks = App.utils.get_data(tickers=tickers)
+                    tickers.extend(list(App.sector_compositions.keys()))
                     tickers.extend(list(App.tickers_to_fetch_by_default)[::-1]) # Reverse the list to make the SP500 always appear first
-                    tickers.extend(App.sector_compositions.keys())
+                    
 
                     ticker_pct_change = {}
                     ticker_df_dict = {}
@@ -152,8 +153,9 @@ class App:
                     self.to_add_by_default_data:List[pd.DataFrame]
                     self.benchmarks_sectors:List[pd.DataFrame]
 
-                    liste_stocks.extend(self.to_add_by_default_data[::-1]) # Reverse the list to make the SP500 always appear first
                     liste_stocks.extend(self.benchmarks_sectors)
+                    liste_stocks.extend(self.to_add_by_default_data[::-1]) # Reverse the list to make the SP500 always appear first
+                    
 
                     assert all(isinstance(el , pd.DataFrame) for el in liste_stocks) , "Bad elements in liste_stocks"
 
