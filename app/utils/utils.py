@@ -3,11 +3,12 @@ import base64
 import warnings
 from typing import Union , Iterable , List
 import os
+import copy
 
 import pandas as pd , numpy as np
 from dash import html 
 from sklearn.preprocessing import MinMaxScaler
-from pandas_datareader import data
+import pandas_datareader
 import yfinance as yf
 warnings.filterwarnings('ignore')
 yf.pdr_override()
@@ -23,13 +24,28 @@ from flask import Flask
 class Utils:
 
     @staticmethod
-    def get_data(tickers : Iterable) -> List[pd.DataFrame]:
+    def get_data(tickers : Iterable , start_date=dt.datetime(1975,1,1)) -> List[pd.DataFrame]:
         ''' 
         Get the data from yahoo finance , using the list of tickers
         '''
-        return [data.get_data_yahoo(tick , dt.datetime(1975,1,1)) for tick in tickers]
+        return [pandas_datareader.data.get_data_yahoo(tick , start_date) for tick in tickers]
 
 
+    @staticmethod
+    def _create_benchmarks_sectors(sector_compositions:dict) -> List[pd.DataFrame]:
+        """ 
+        Create the list of df with aggregated benchmarks by sector
+        """
+        sector_df_list = []
+        for sector in sector_compositions:
+
+            tickers = sector_compositions[sector]
+
+            sector_df_list.append(pd.DataFrame(pd.concat\
+                                                (Utils.get_data(tickers , start_date=dt.datetime.now() - dt.timedelta(days=365*5)),\
+                                                 axis=1)["Adj Close"].mean(axis=1) , columns=["Adj Close"]).sort_index())
+            
+        return sector_df_list 
 
     @staticmethod
     def get_pct_change(df : pd.DataFrame) -> dict:
@@ -46,14 +62,14 @@ class Utils:
                             or Utils.prev_diff(5, current , df) \
                             or Utils.prev_diff(6, current , df) \
                             or Utils.prev_diff(9, current , df) \
-                            or "N/A"
+                            or ("N/A" , "N/A")
 
         # Two weeks
         previous , twoweek_diff = Utils.prev_diff(14, current , df) \
                                 or Utils.prev_diff(10, current , df) \
                                 or Utils.prev_diff(16, current , df) \
                                 or Utils.prev_diff(12, current , df) \
-                                or "N/A"       
+                                or ("N/A" , "N/A")       
 
         # Six months
         previous , sixmonth_diff = Utils.prev_diff(180, current , df) \
@@ -61,7 +77,7 @@ class Utils:
                                 or Utils.prev_diff(6*20, current , df) \
                                 or Utils.prev_diff(6*21, current , df) \
                                 or Utils.prev_diff(6*22, current , df) \
-                                or "N/A"
+                                or ("N/A" , "N/A")
 
         # One year
         previous , oneyear_diff = Utils.prev_diff(252, current , df) \
@@ -69,7 +85,8 @@ class Utils:
                                 or Utils.prev_diff(250, current , df) \
                                 or Utils.prev_diff(249, current , df) \
                                 or Utils.prev_diff(253, current , df) \
-                                or "N/A"
+                                or ("N/A" , "N/A")
+
 
         # Five years
         previous , fiveyear_diff = Utils.prev_diff(365*5, current , df) \
@@ -78,7 +95,8 @@ class Utils:
                                 or Utils.prev_diff(250*5, current , df) \
                                 or Utils.prev_diff(249*5, current , df) \
                                 or Utils.prev_diff(253*5, current , df) \
-                                or "N/A"
+                                or ("N/A" , "N/A")
+
 
 
         # Overall
@@ -95,14 +113,34 @@ class Utils:
 
 
     @staticmethod
-    def minmax_scale(days : int , listestock : Iterable) -> pd.DataFrame:
+    def minmax_scale(days : int , listestock : Iterable) -> list[pd.DataFrame]:
         ''' Scale the data , to make comparaison possible between stocks '''
+
+        def __fix_date_error(df_ , days):
+
+            day = copy.deepcopy(days)
+            counter = 0
+            while (counter := counter + 1) < 100_000_000:
+                try:
+                    df_ = df[df.index[-1] - dt.timedelta(day):]
+                    return df_
+                except KeyError:
+                    day -= 1
+
         period_df = []
         for df in listestock:
-            df_ = df[df.index[-1] - dt.timedelta(days):]
+
+            try:
+                df_ = df[df.index[-1] - dt.timedelta(days):]
+            except KeyError:
+                df_ = __fix_date_error(df , days)
+
+
             df_['normalized'] = MinMaxScaler().fit_transform(df_['Adj Close'].values.reshape(-1,1))
             period_df.append(df_)
+            
         return period_df
+
 
 
     @staticmethod

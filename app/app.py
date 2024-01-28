@@ -4,9 +4,10 @@ from threading import Timer
 import warnings
 import logging
 from typing import List , Iterable
+
+
 import pandas as pd
 import webbrowser
-
 import numpy as np
 import plotly.graph_objects as go
 
@@ -27,6 +28,12 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 from utils.utils import Utils
 from utils.viz import Viz
+
+# Next dev step ; 
+# Clean the Bad tickers in the benchmark list , to avoid big piks in the graphs 
+# Keep only the most consistants tickers (where yahoo finance has all data)
+# Delete and replace the wrong ones
+# Sort the lists to have sp500 displayed first 
 
 
 class App:
@@ -53,7 +60,7 @@ class App:
         'Consumer Staples': ('PG', 'NSRGF', 'UN', 'CL', 'KO', 'PEP', 'MDLZ', 'ADM', 'STZ', 'MO' , 'NESN.SW' , 'DGE.L' , 'BN.PA'), 
         'Health Care': ('JNJ', 'PFE', 'UNH', 'MRK', 'ABBV', 'GILD', 'BMY', 'AMGN', 'SYK', 'TMO' , 'NOVN.SW' , 'AZN' , 'SAN.PA'), 
         'Financials': ('JPM', 'BAC', 'WFC', 'GS', 'MS', 'AXP', 'BLK', 'MET', 'PNC' , 'HSBA.L' , 'UBSG.SW' , 'TD.TO'), 
-        'Information Technology': ('MSFT', 'AAPL', 'GOOGL', 'AMZN', 'FB', 'TSLA', 'V', 'NVDA', 'INTC', 'CSCO' , 'IBM' , '005930.KS' , 'TSM'), 
+        'Information Technology': ('MSFT', 'AAPL', 'GOOGL', 'AMZN', 'META', 'TSLA', 'V', 'NVDA', 'INTC', 'CSCO' , 'IBM' , '005930.KS' , 'TSM'), 
         'Communication Services': ('VZ', 'T', 'CMCSA', 'DISCA', 'ATVI', 'NFLX', 'LUMN', 'FOXA', 'CHTR', 'VIAC' , '0941.HK' , 'DTE.DE' , 'TLS.AX'),
         'Utilities': ('NEE', 'DUK', 'SO', 'D', 'EXC', 'SRE', 'AEP', 'XEL', 'PEG', 'ED' , 'FTS' , 'ENGI.PA' , 'EDP.LS'),
         'Real Estate': ('SPG', 'EQIX', 'PLD', 'DLR', 'WELL', 'PSA', 'CBRE', 'BXP', 'AVB', 'CCI' , 'O' , 'VNA.DE' , 'BLND.L' , 'SCG.AX')
@@ -69,6 +76,7 @@ class App:
         self.bear = App.utils.load_image_as_bytes(App.bear_path)
         self.bull = App.utils.load_image_as_bytes(App.bull_path)
 
+        self.benchmarks_sectors:List[pd.DataFrame] = App.utils._create_benchmarks_sectors(App.sector_compositions)
 
         self.ticker_df_dict = {} 
         self.ticker_pct_change = {}
@@ -136,14 +144,18 @@ class App:
                     
                     liste_stocks = App.utils.get_data(tickers=tickers)
                     tickers.extend(list(App.tickers_to_fetch_by_default)[::-1]) # Reverse the list to make the SP500 always appear first
+                    tickers.extend(App.sector_compositions.keys())
 
                     ticker_pct_change = {}
                     ticker_df_dict = {}
 
                     self.to_add_by_default_data:List[pd.DataFrame]
+                    self.benchmarks_sectors:List[pd.DataFrame]
 
                     liste_stocks.extend(self.to_add_by_default_data[::-1]) # Reverse the list to make the SP500 always appear first
+                    liste_stocks.extend(self.benchmarks_sectors)
 
+                    assert all(isinstance(el , pd.DataFrame) for el in liste_stocks) , "Bad elements in liste_stocks"
 
                     pct_change_list = [App.utils.get_pct_change(df) for df in liste_stocks]
                         
@@ -153,13 +165,12 @@ class App:
                     for i in range(len(tickers)):
                         ticker_pct_change[tickers[i]] = pct_change_list[i]
 
-
                     self.ticker_df_dict = ticker_df_dict
                     self.ticker_pct_change = ticker_pct_change
                     
                     return App.main(tickers , pct_change_list , 
-                                self.to_add_by_default_data[0] , # SP500 will always be the first element
-                                liste_stocks)
+                                    self.to_add_by_default_data[0] , # SP500 will always be the first element
+                                    liste_stocks)
                 
                 if not tickers:
 
@@ -261,9 +272,6 @@ class App:
         liste_one_year = App.utils.minmax_scale(365 , liste_stocks)
         liste_five_year = App.utils.minmax_scale(365*5 , liste_stocks)
 
-
-
-        # Function to add the traces
         fig = go.Figure()
         fig.add_trace(go.Scatter(y=liste_stock_overall[-1]['normalized'] , hovertext=liste_stock_overall[-1]['Adj Close'].apply(lambda x : str(f'Price : {np.round(x,2)}')), x=liste_stock_overall[-1].index , name=tickers[-1]  , mode='lines' , visible=True))
         for i in range(len(liste_stocks) -1):
