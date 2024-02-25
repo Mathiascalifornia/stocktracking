@@ -52,29 +52,40 @@ class App:
 
 
     # The dictionnary of tickers for sectors benchmarks 
-    sector_compositions = {
-        'Energy': ('XOM', 'CVX', 'COP', 'OXY', 'PSX', 'HES' , 'EPD' , 'VLO' , 'PSX'), # 'TOT.TO'  , '0883.HK'  , 'RWE.DE' , 'ENI.MI'
-        'Materials': ('ECL', 'APD', 'IP', 'SHW', 'NUE', 'FCX',  'RPM' , 'HCMLF', 'CRH' , 'FCX' , 'RPM'), # , 'HEI.DE' 
-        'Industrials': ('MMM', 'HON', 'RTX', 'GE', 'BA', 'CAT', 'EMR', 'ITW'), # 'SIE.DE' , 'ABBN.SW' , 'ATCO-A.ST' ,
-        'Consumer Discretionary': ('VFC', 'NKE', 'HD', 'MCD', 'SBUX', 'F', 'GM', 'BKNG', 'CCL' , 'LEG' , 'BKNG'), # 'ITX.MC' , 'MC.PA' , 'CFR.SW'
-        'Consumer Staples': ('PG', 'NSRGF', 'GIS', 'CL', 'KO', 'PEP', 'MDLZ', 'ADM', 'STZ', 'MO' , 'STZ'), # 'NESN.SW' , 'DGE.L' , 'BN.PA'
-        'Health Care': ('JNJ', 'PFE', 'UNH', 'MRK', 'ABBV', 'GILD', 'BMY', 'AMGN', 'SYK', 'TMO' , 'BMY' , 'AZN'), # 'NOVN.SW' , 'SAN.PA'
-        'Financials': ('JPM', 'BAC', 'WFC', 'GS', 'MS', 'AXP', 'BLK', 'MET', 'PNC'), #, 'TD.TO', 'UBSG.SW'  , 'HSBA.L'
-        'Information Technology': ('MSFT', 'AAPL', 'GOOGL', 'AMZN', 'META', 'TSLA', 'V', 'NVDA', 'INTC', 'CSCO' , 'IBM' , 'TSM'), # , '005930.KS'
-        'Communication Services': ('VZ', 'T', 'CMCSA', 'TMUS', 'NFLX', 'LUMN', 'FOXA', 'CHTR', 'SBAC'), #  , '0941.HK' , 'DTE.DE' , 'TLS.AX'
-        'Utilities': ('NEE', 'DUK', 'SO', 'D', 'EXC', 'SRE', 'AEP', 'XEL', 'PEG', 'ED' , 'FTS'), # , 'ENGI.PA' , 'EDP.LS'
-        'Real Estate': ('SPG', 'EQIX', 'PLD', 'DLR', 'WELL', 'PSA', 'CBRE', 'BXP', 'AVB', 'CCI' , 'O' , 'WELL') #  , 'VNA.DE' , 'BLND.L' , 'SCG.AX'
-                        }
+    # sector_compositions = {
+    #     'Energy': ('XOM', 'CVX', 'COP', 'OXY', 'PSX', 'HES' , 'EPD' , 'VLO' , 'PSX'), # 'TOT.TO'  , '0883.HK'  , 'RWE.DE' , 'ENI.MI'
+    #     'Materials': ('ECL', 'APD', 'IP', 'SHW', 'NUE', 'FCX',  'RPM' , 'HCMLF', 'CRH' , 'FCX' , 'RPM'), # , 'HEI.DE' 
+    #     'Industrials': ('MMM', 'HON', 'RTX', 'GE', 'BA', 'CAT', 'EMR', 'ITW'), # 'SIE.DE' , 'ABBN.SW' , 'ATCO-A.ST' ,
+    #     'Consumer Discretionary': ('VFC', 'NKE', 'HD', 'MCD', 'SBUX', 'F', 'GM', 'BKNG', 'CCL' , 'LEG' , 'BKNG'), # 'ITX.MC' , 'MC.PA' , 'CFR.SW'
+    #     'Consumer Staples': ('PG', 'NSRGF', 'GIS', 'CL', 'KO', 'PEP', 'MDLZ', 'ADM', 'STZ', 'MO' , 'STZ'), # 'NESN.SW' , 'DGE.L' , 'BN.PA'
+    #     'Health Care': ('JNJ', 'PFE', 'UNH', 'MRK', 'ABBV', 'GILD', 'BMY', 'AMGN', 'SYK', 'TMO' , 'BMY' , 'AZN'), # 'NOVN.SW' , 'SAN.PA'
+    #     'Financials': ('JPM', 'BAC', 'WFC', 'GS', 'MS', 'AXP', 'BLK', 'MET', 'PNC'), #, 'TD.TO', 'UBSG.SW'  , 'HSBA.L'
+    #     'Information Technology': ('MSFT', 'AAPL', 'GOOGL', 'AMZN', 'META', 'TSLA', 'V', 'NVDA', 'INTC', 'CSCO' , 'IBM' , 'TSM'), # , '005930.KS'
+    #     'Communication Services': ('VZ', 'T', 'CMCSA', 'TMUS', 'NFLX', 'LUMN', 'FOXA', 'CHTR', 'SBAC'), #  , '0941.HK' , 'DTE.DE' , 'TLS.AX'
+    #     'Utilities': ('NEE', 'DUK', 'SO', 'D', 'EXC', 'SRE', 'AEP', 'XEL', 'PEG', 'ED' , 'FTS'), # , 'ENGI.PA' , 'EDP.LS'
+    #     'Real Estate': ('SPG', 'EQIX', 'PLD', 'DLR', 'WELL', 'PSA', 'CBRE', 'BXP', 'AVB', 'CCI' , 'O' , 'WELL') #  , 'VNA.DE' , 'BLND.L' , 'SCG.AX'
+    #                     }
+
+    sector_compositions = {"Materials" : ("^SP500-15",) , 
+                           "Energy" : ("^GSPE",) , 
+                           "Financials" : ("^SP500-40",) , 
+                           "Industrials" : ("^SP500-20",) , 
+                           "Utilities" : ("^SP500-55",) , 
+                           "Consumer Staples" : ("^SP500-30",) , 
+                           "Consumer Discretionary" : ("^SP500-25",) , 
+                           "Health Care" : ("^SP500-35",) , 
+                           "Information Technology" : ("^SP500-45",) , 
+                           "Communication Services" : ("^SP500-50",) , 
+                           "Real Estate" : ("^SP500-60",)}
 
     def __init__(self):
 
         self.to_add_by_default_data:List[pd.DataFrame]
         self.to_add_by_default_data = App.utils.get_data(tickers=App.tickers_to_fetch_by_default.values())
 
-        self.bear:bytes 
-        self.bull:bytes 
-        self.bear = App.utils.load_image_as_bytes(App.bear_path)
-        self.bull = App.utils.load_image_as_bytes(App.bull_path)
+
+        self.bear:bytes = App.utils.load_image_as_bytes(App.bear_path)
+        self.bull:bytes = App.utils.load_image_as_bytes(App.bull_path)
 
         self.benchmarks_sectors:List[pd.DataFrame] = App.utils._create_benchmarks_sectors(App.sector_compositions)
 
@@ -157,7 +168,7 @@ class App:
                     liste_stocks.extend(self.to_add_by_default_data[::-1]) # Reverse the list to make the SP500 always appear first
                     
 
-                    assert all(isinstance(el , pd.DataFrame) for el in liste_stocks) , "Bad elements in liste_stocks"
+                    assert all(isinstance(el , (pd.DataFrame , pd.Series)) for el in liste_stocks) , "Bad elements in liste_stocks"
 
                     pct_change_list = [App.utils.get_pct_change(df) for df in liste_stocks]
                         

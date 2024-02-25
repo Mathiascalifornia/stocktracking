@@ -36,16 +36,37 @@ class Utils:
         """ 
         Create the list of df with aggregated benchmarks by sector
         """
+#         sector_df_list = []
+#         for sector in sector_compositions:
+
+#             tickers = sector_compositions[sector]
+
+#             # Old date : dt.datetime.now() - dt.timedelta(days=365*5)
+#             sector_df_list.append(
+#                 pd.DataFrame(
+#                     pd.concat(
+#                         [Utils.get_data(tickers, start_date=dt.datetime(1975, 1, 1))["Adj Close"].mean(axis=1)],
+#                         axis=1
+#                     ),
+#                     columns=["Adj Close"]
+#                 ).sort_index()
+# )
+     
+#         return sector_df_list 
+
+
         sector_df_list = []
         for sector in sector_compositions:
-
             tickers = sector_compositions[sector]
 
-            sector_df_list.append(pd.DataFrame(pd.concat\
-                                                (Utils.get_data(tickers , start_date=dt.datetime.now() - dt.timedelta(days=365*5)),\
-                                                 axis=1)["Adj Close"].mean(axis=1) , columns=["Adj Close"]).sort_index())
-            
-        return sector_df_list 
+
+            # Old date: dt.datetime.now() - dt.timedelta(days=365*5)
+            sector_df_list.append(
+                    pd.DataFrame(pd.concat(Utils.get_data(tickers, start_date=dt.datetime(1975, 1, 1)))[["Adj Close"]]\
+                                 .mean(axis=1).sort_index() , columns=("Adj Close",))
+            )
+        
+        return sector_df_list
 
     @staticmethod
     def get_pct_change(df : pd.DataFrame) -> dict:
