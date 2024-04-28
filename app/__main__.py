@@ -29,7 +29,7 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 from utils.utils import Utils
 from utils.viz import Viz
 
-# TODO ; Export the first fig time spans approach to all the figs
+# TODO ; Export the first fig time spans approach to all the figs, using the data_preprocessor script
 
 
 class App:
