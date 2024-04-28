@@ -29,11 +29,7 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 from utils.utils import Utils
 from utils.viz import Viz
 
-# Next dev step ; 
-# Clean the Bad tickers in the benchmark list , to avoid big piks in the graphs 
-# Keep only the most consistants tickers (where yahoo finance has all data)
-# Delete and replace the wrong ones
-# Sort the lists to have sp500 displayed first 
+# TODO ; Export the first fig time spans approach to all the figs
 
 
 class App:
@@ -50,21 +46,6 @@ class App:
     bear_path = os.path.join(ressource_path , "bear.jpg")
     bull_path = os.path.join(ressource_path ,  "bull.jpg")
 
-
-    # The dictionnary of tickers for sectors benchmarks 
-    # sector_compositions = {
-    #     'Energy': ('XOM', 'CVX', 'COP', 'OXY', 'PSX', 'HES' , 'EPD' , 'VLO' , 'PSX'), # 'TOT.TO'  , '0883.HK'  , 'RWE.DE' , 'ENI.MI'
-    #     'Materials': ('ECL', 'APD', 'IP', 'SHW', 'NUE', 'FCX',  'RPM' , 'HCMLF', 'CRH' , 'FCX' , 'RPM'), # , 'HEI.DE' 
-    #     'Industrials': ('MMM', 'HON', 'RTX', 'GE', 'BA', 'CAT', 'EMR', 'ITW'), # 'SIE.DE' , 'ABBN.SW' , 'ATCO-A.ST' ,
-    #     'Consumer Discretionary': ('VFC', 'NKE', 'HD', 'MCD', 'SBUX', 'F', 'GM', 'BKNG', 'CCL' , 'LEG' , 'BKNG'), # 'ITX.MC' , 'MC.PA' , 'CFR.SW'
-    #     'Consumer Staples': ('PG', 'NSRGF', 'GIS', 'CL', 'KO', 'PEP', 'MDLZ', 'ADM', 'STZ', 'MO' , 'STZ'), # 'NESN.SW' , 'DGE.L' , 'BN.PA'
-    #     'Health Care': ('JNJ', 'PFE', 'UNH', 'MRK', 'ABBV', 'GILD', 'BMY', 'AMGN', 'SYK', 'TMO' , 'BMY' , 'AZN'), # 'NOVN.SW' , 'SAN.PA'
-    #     'Financials': ('JPM', 'BAC', 'WFC', 'GS', 'MS', 'AXP', 'BLK', 'MET', 'PNC'), #, 'TD.TO', 'UBSG.SW'  , 'HSBA.L'
-    #     'Information Technology': ('MSFT', 'AAPL', 'GOOGL', 'AMZN', 'META', 'TSLA', 'V', 'NVDA', 'INTC', 'CSCO' , 'IBM' , 'TSM'), # , '005930.KS'
-    #     'Communication Services': ('VZ', 'T', 'CMCSA', 'TMUS', 'NFLX', 'LUMN', 'FOXA', 'CHTR', 'SBAC'), #  , '0941.HK' , 'DTE.DE' , 'TLS.AX'
-    #     'Utilities': ('NEE', 'DUK', 'SO', 'D', 'EXC', 'SRE', 'AEP', 'XEL', 'PEG', 'ED' , 'FTS'), # , 'ENGI.PA' , 'EDP.LS'
-    #     'Real Estate': ('SPG', 'EQIX', 'PLD', 'DLR', 'WELL', 'PSA', 'CBRE', 'BXP', 'AVB', 'CCI' , 'O' , 'WELL') #  , 'VNA.DE' , 'BLND.L' , 'SCG.AX'
-    #                     }
 
     sector_compositions = {"Materials" : ("^SP500-15",) , 
                            "Energy" : ("^GSPE",) , 
@@ -161,8 +142,6 @@ class App:
                     ticker_pct_change = {}
                     ticker_df_dict = {}
 
-                    self.to_add_by_default_data:List[pd.DataFrame]
-                    self.benchmarks_sectors:List[pd.DataFrame]
 
                     liste_stocks.extend(self.benchmarks_sectors)
                     liste_stocks.extend(self.to_add_by_default_data[::-1]) # Reverse the list to make the SP500 always appear first
@@ -299,7 +278,6 @@ class App:
         # Add the traces
         for list_ in (liste_two_week, liste_one_month,  liste_six_month, liste_one_year, liste_five_year):
             App.viz.add_a_trace(list_ , fig=fig , tickers=tickers)
-  
 
 
         labels = (
