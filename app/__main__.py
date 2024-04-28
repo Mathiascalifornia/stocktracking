@@ -293,7 +293,7 @@ class App:
 
 
         # Add the traces
-        for list_ in (liste_two_week, liste_six_month, liste_one_year, liste_five_year):
+        for list_ in (liste_two_week,liste_one_month,  liste_six_month, liste_one_year, liste_five_year):
             App.viz.add_a_trace(list_ , fig=fig , tickers=tickers)
 
 
