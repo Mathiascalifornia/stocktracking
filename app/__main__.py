@@ -286,69 +286,76 @@ class App:
         liste_one_year:list[pd.DataFrame] = App.utils.minmax_scale(365 , liste_stocks)
         liste_five_year:list[pd.DataFrame] = App.utils.minmax_scale(365*5 , liste_stocks)
 
+
         fig = go.Figure()
+
+        # # The "by default" status of the fig
         fig.add_trace(go.Scatter(y=liste_stock_overall[-1]['normalized'] , hovertext=liste_stock_overall[-1]['Adj Close'].apply(lambda x : str(f'Price : {np.round(x,2)}')), x=liste_stock_overall[-1].index , name=tickers[-1]  , mode='lines' , visible=True))
-        for i in range(len(liste_stocks) -1):
+        
+        for i in range(len(liste_stocks)-1):
             fig.add_trace(go.Scatter(y=liste_stock_overall[i]['normalized'] , hovertext=liste_stock_overall[i]['Adj Close'].apply(lambda x : str(f'Price : {np.round(x,2)}')), x=liste_stock_overall[i].index , name=tickers[i] , mode='lines', visible='legendonly'))
 
 
         # Add the traces
-        for list_ in (liste_two_week,liste_one_month,  liste_six_month, liste_one_year, liste_five_year):
+        for list_ in (liste_two_week, liste_one_month,  liste_six_month, liste_one_year, liste_five_year):
             App.viz.add_a_trace(list_ , fig=fig , tickers=tickers)
+  
 
 
-        def get_visible_lists(time_period:Literal["ALL" , "2WTD", "1MTD" , "6MTD", "1YTD", "5YTD"]) -> list:
-             # True c'est toujours SP500 et c'est la valeur par défault
-            pass
+        labels = (
+            "2WTD",
+            "1MTD",
+            "6MTD",
+            "1YTD",
+            "5YTD"
+        )
 
-        liste_all = [
-                 True, 
-                  *['legendonly' for i in range(len(tickers) - 1)],
-                  *[False for i in range(len(tickers)*4)]
-                ]
-        
-        liste2weeks = [
-                  *[False for i in range(len(tickers))] , 
-                  *['legendonly' for i in range(len(tickers) - 1)] , 
-                  True, 
-                  *[False for i in range(len(tickers)*3)]
-                ]
+        n_time_period = len(labels)
 
-        liste1month = [
-                  *[False for i in range(len(tickers))] , 
-                  *['legendonly' for i in range(len(tickers) - 1)] , 
-                  True, 
-                  *[False for i in range(len(tickers)*3)]
-                ]
-        
-        liste6month = [
-                    *[False for i in range(len(tickers)*2)] ,
-                    *['legendonly' for i in range(len(tickers) - 1)] ,
-                    True ,
-                    *[False for i in range(len(tickers)*2)]
-                ]
-        
-        liste1year = [
-                   *[False for i in range(len(tickers)*3)] ,
-                   *['legendonly' for i in range(len(tickers) - 1)] ,
-                   True ,
-                   *[False for i in range(len(tickers))]
-                ]
-        
-        liste5years = [
-                   *[False for i in range(len(tickers)*4)] ,
-                   *['legendonly' for i in range(len(tickers) - 1)] ,
-                    True
-                ]
+        first_n_false = 1
+        last_n_false = n_time_period-1
+
+        legend_only_templ = ['legendonly' for i in range(len(tickers) - 1)]
+
+        results = {
+            
+                "ALL" : [ 
+                    *['legendonly' for i in range(len(tickers) - 1)],
+                    *[False for i in range(len(tickers)*5)],
+                    True,
+                ] , 
+                
+
+                }
+
+        for label in labels:
+
+            
+            result = [ 
+
+                *[False for i in range(len(tickers) * first_n_false)] , 
+                *legend_only_templ, 
+                True,
+                *[False for i in range(len(tickers) * last_n_false)]
+            ]
+            
+
+            first_n_false += 1
+            last_n_false -= 1
+
+            
+
+            results[label] = result
+
 
         # Create the buttons
         dropdown_buttons = [
-        {'label': "ALL", 'method': "update", 'args': [{"visible": liste_all} , {'title' : 'Overall normalized stock prices'}]},
-        {'label': "2WTD", 'method': "update", 'args': [{"visible": liste2weeks} , {'title' : 'Two weeks normalized stock prices'}]},
-        {'label': "1MTD", 'method': "update", 'args': [{"visible": liste1month} , {'title' : 'One month normalized stock prices'}]},
-        {'label': "6MTD", 'method': "update", 'args': [{"visible": liste6month} , {'title' : 'Six months normalized stock prices'}]},
-        {'label': "1YTD", 'method': "update", 'args': [{"visible": liste1year} , {'title' : 'One year normalized stock prices'}]},
-        {'label': "5YTD", 'method': "update", 'args': [{"visible":liste5years} , {'title' : 'Five years normalized stock prices'}]}
+        {'label': "ALL", 'method': "update", 'args': [{"visible": results["ALL"]} , {'title' : 'Overall normalized stock prices'}]},
+        {'label': "2WTD", 'method': "update", 'args': [{"visible": results["2WTD"]} , {'title' : 'Two weeks normalized stock prices'}]},
+        {'label': "1MTD", 'method': "update", 'args': [{"visible": results["1MTD"]} , {'title' : 'One month normalized stock prices'}]},
+        {'label': "6MTD", 'method': "update", 'args': [{"visible": results["6MTD"]} , {'title' : 'Six months normalized stock prices'}]},
+        {'label': "1YTD", 'method': "update", 'args': [{"visible": results["1YTD"]} , {'title' : 'One year normalized stock prices'}]},
+        {'label': "5YTD", 'method': "update", 'args': [{"visible":results["5YTD"]} , {'title' : 'Five years normalized stock prices'}]}
         ]
 
         # Update the figure to add dropdown menu
