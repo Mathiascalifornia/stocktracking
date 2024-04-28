@@ -279,11 +279,11 @@ class App:
     def main(tickers:Iterable , pct_change_list:Iterable ,
              sp500:pd.DataFrame , liste_stocks:Iterable) -> html.Div:
 
-        liste_stock_overall = App.utils.minmax_scale(365*47 , liste_stocks)
-        liste_two_week = App.utils.minmax_scale(14 , liste_stocks)
-        liste_six_month = App.utils.minmax_scale(30*6 , liste_stocks)
-        liste_one_year = App.utils.minmax_scale(365 , liste_stocks)
-        liste_five_year = App.utils.minmax_scale(365*5 , liste_stocks)
+        liste_stock_overall:list[pd.DataFrame] = App.utils.minmax_scale(365*47 , liste_stocks)
+        liste_two_week:list[pd.DataFrame] = App.utils.minmax_scale(14 , liste_stocks)
+        liste_six_month:list[pd.DataFrame] = App.utils.minmax_scale(30*6 , liste_stocks)
+        liste_one_year:list[pd.DataFrame] = App.utils.minmax_scale(365 , liste_stocks)
+        liste_five_year:list[pd.DataFrame] = App.utils.minmax_scale(365*5 , liste_stocks)
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(y=liste_stock_overall[-1]['normalized'] , hovertext=liste_stock_overall[-1]['Adj Close'].apply(lambda x : str(f'Price : {np.round(x,2)}')), x=liste_stock_overall[-1].index , name=tickers[-1]  , mode='lines' , visible=True))
@@ -292,21 +292,49 @@ class App:
 
 
         # Add the traces
-        App.viz.add_a_trace(liste_two_week , fig=fig , tickers=tickers)
-        App.viz.add_a_trace(liste_six_month , fig=fig , tickers=tickers)
-        App.viz.add_a_trace(liste_one_year , fig=fig , tickers=tickers)
-        App.viz.add_a_trace(liste_five_year , fig=fig , tickers=tickers)
+        for list_ in (liste_two_week, liste_six_month, liste_one_year, liste_five_year):
+            App.viz.add_a_trace(list_ , fig=fig , tickers=tickers)
 
 
-        liste1 = [*['legendonly' for i in range(len(tickers) - 1)] , True  , *[False for i in range(len(tickers)*4)]]
-        liste2 = [*[False for i in range(len(tickers))] , *['legendonly' for i in range(len(tickers) - 1)] , True , *[False for i in range(len(tickers)*3)]]
-        liste3 = [*[False for i in range(len(tickers)*2)] , *['legendonly' for i in range(len(tickers) - 1)] , True ,  *[False for i in range(len(tickers)*2)]]
-        liste4 = [*[False for i in range(len(tickers)*3)] , *['legendonly' for i in range(len(tickers) - 1)] , True , *[False for i in range(len(tickers))]]
-        liste5 = [*[False for i in range(len(tickers)*4)] , *['legendonly' for i in range(len(tickers) - 1)] , True]
+        def get_visible_lists():
+             pass
+
+        liste1 = [
+                    True, 
+                  *['legendonly' for i in range(len(tickers) - 1)],
+                  *[False for i in range(len(tickers)*4)]
+                ]
+        
+        liste2 = [
+                  *[False for i in range(len(tickers))] , 
+                  *['legendonly' for i in range(len(tickers) - 1)] , 
+                  True, 
+                  *[False for i in range(len(tickers)*3)]
+                  ]
+        
+        liste3 = [
+                    *[False for i in range(len(tickers)*2)] ,
+                    *['legendonly' for i in range(len(tickers) - 1)] ,
+                    True ,
+                    *[False for i in range(len(tickers)*2)]
+                ]
+        
+        liste4 = [
+                   *[False for i in range(len(tickers)*3)] ,
+                   *['legendonly' for i in range(len(tickers) - 1)] ,
+                   True ,
+                   *[False for i in range(len(tickers))]
+                ]
+        
+        liste5 = [
+                   *[False for i in range(len(tickers)*4)] ,
+                   *['legendonly' for i in range(len(tickers) - 1)] ,
+                    True
+                ]
 
         # Create the buttons
         dropdown_buttons = [
-        {'label': "ALL", 'method': "update", 'args': [{"visible": liste1} , {'title' : 'Overall normalized stock prices'}] },
+        {'label': "ALL", 'method': "update", 'args': [{"visible": liste1} , {'title' : 'Overall normalized stock prices'}]},
         {'label': "2WTD", 'method': "update", 'args': [{"visible": liste2} , {'title' : 'Two weeks normalized stock prices'}]},
         {'label': "6MTD", 'method': "update", 'args': [{"visible": liste3} , {'title' : 'Six months normalized stock prices'}]},
         {'label': "1YTD", 'method': "update", 'args': [{"visible": liste4} , {'title' : 'One year normalized stock prices'}]},
