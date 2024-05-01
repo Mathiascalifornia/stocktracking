@@ -269,7 +269,11 @@ class App:
         fig = go.Figure()
 
         # # The "by default" status of the fig
-        fig.add_trace(go.Scatter(y=liste_stock_overall[-1]['normalized'] , hovertext=liste_stock_overall[-1]['Adj Close'].apply(lambda x : str(f'Price : {np.round(x,2)}')), x=liste_stock_overall[-1].index , name=tickers[-1]  , mode='lines' , visible=True))
+        fig.add_trace(go.Scatter(y=liste_stock_overall[-1]['normalized'] , 
+                                 hovertext=liste_stock_overall[-1]['Adj Close']
+                                 .apply(lambda x : str(f'Price : {np.round(x,2)}')), 
+                                                    x=liste_stock_overall[-1].index , name=tickers[-1]  , 
+                                                    mode='lines' , visible=True))
         
         for i in range(len(liste_stocks)-1):
             fig.add_trace(go.Scatter(y=liste_stock_overall[i]['normalized'] , hovertext=liste_stock_overall[i]['Adj Close'].apply(lambda x : str(f'Price : {np.round(x,2)}')), x=liste_stock_overall[i].index , name=tickers[i] , mode='lines', visible='legendonly'))
@@ -277,7 +281,7 @@ class App:
 
         # Add the traces
         for list_ in (liste_two_week, liste_one_month,  liste_six_month, liste_one_year, liste_five_year):
-            App.viz.add_a_trace(list_ , fig=fig , tickers=tickers)
+            App.viz.add_a_trace_main_fig(list_ , fig=fig , tickers=tickers)
 
 
         labels = (

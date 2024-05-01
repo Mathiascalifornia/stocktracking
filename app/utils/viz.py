@@ -16,13 +16,21 @@ warnings.filterwarnings('ignore')
 yf.pdr_override()
 
 
+from utils.data_preprocessor import DfSubsetter
+
+
 class Viz:
+
+
+
 
     @staticmethod
     def plot_rsi(df : pd.DataFrame) -> go.Figure:
         """ 
         Plot the Relative Strenght Index figure 
         """
+
+
         df['RSI'] = ta.RSI(df['Adj Close'])
 
         # We'll do that with simple buttons
@@ -138,7 +146,7 @@ class Viz:
         return vol_fig
 
     @staticmethod
-    def add_a_trace(liste , fig , tickers):
+    def add_a_trace_main_fig(liste , fig , tickers):
         ''' Add a trace in the figure'''
         for i in range(len(liste)):
             fig.add_trace(go.Scatter(y=liste[i]['normalized'] , hovertext=liste[i]['Adj Close'].apply(lambda x : str(f'Price : {np.round(x,2)}')), x=liste[i].index , name=tickers[i] , mode='lines', visible=False))

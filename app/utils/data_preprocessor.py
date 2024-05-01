@@ -10,24 +10,9 @@ class DfSubsetter:
     The purpose of this class is to preprocess data for the viz (susbet the dataframes and prepare the 'legend_only' dict)
     """
 
-    MINUS_TIME_PERIOD = (14, 30, 30*6, 365, 365*5)
-    TIME_PERIOD_LABELS = ("2WTD", "1MTD", "6MTD", "1YTD", "5YTD")
+    MINUS_TIME_PERIOD = (14, 30, 30*3, 30*6, 365, 365*5)
+    TIME_PERIOD_LABELS = ("2WTD", "1MTD", "3MTD", "6MTD", "1YTD", "5YTD")
 
-    def __init__(self, df:pd.DataFrame , 
-                title:str , 
-                len_ticker:int):
-        
-        self.df = df 
-        self.title = title 
-        self.len_ticker = len_ticker
-
-
-    def main(self):
-
-        subset_dict:dict = DfSubsetter.get_df_subsets_dict(df=self.df)
-        legend_argument_dict:dict = DfSubsetter.get_legend_arguments(title=self.title, len_tickers=self.len_ticker)
-
-        return subset_dict, legend_argument_dict 
     
     @staticmethod
     def get_df_subsets_dict(df:pd.DataFrame) -> Dict[str, pd.DataFrame]:
@@ -82,6 +67,7 @@ class DfSubsetter:
         return  [
                 {'label': "2WTD", 'method': "update", 'args': [{"visible": results["2WTD"]} , {'title' : f'Two weeks {title}'}]},
                 {'label': "1MTD", 'method': "update", 'args': [{"visible": results["1MTD"]} , {'title' : f'One month {title}'}]},
+                {'label': "3MTD", 'method': "update", 'args': [{"visible": results["3MTD"]} , {'title' : f'Three months {title}'}]},
                 {'label': "6MTD", 'method': "update", 'args': [{"visible": results["6MTD"]} , {'title' : f'Six months {title}'}]},
                 {'label': "1YTD", 'method': "update", 'args': [{"visible": results["1YTD"]} , {'title' : f'One year {title}'}]},
                 {'label': "5YTD", 'method': "update", 'args': [{"visible":results["5YTD"]} , {'title' : f'Five years {title}'}]}
