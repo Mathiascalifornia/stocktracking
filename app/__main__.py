@@ -3,7 +3,7 @@ import os
 from threading import Timer
 import warnings
 import logging
-from typing import List , Iterable, Literal
+from typing import List , Iterable
 
 
 import pandas as pd
@@ -28,6 +28,7 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 from utils.utils import Utils
 from utils.viz import Viz
+from utils.data_preprocessor import DfSubsetter
 
 # TODO ; Export the first fig time spans approach to all the figs, using the data_preprocessor script
 
@@ -261,6 +262,7 @@ class App:
         liste_stock_overall:list[pd.DataFrame] = App.utils.minmax_scale(365*47 , liste_stocks)
         liste_two_week:list[pd.DataFrame] = App.utils.minmax_scale(14 , liste_stocks)
         liste_one_month:list[pd.DataFrame] = App.utils.minmax_scale(30 , liste_stocks)
+        liste_three_month:list[pd.DataFrame] = App.utils.minmax_scale(30*3 , liste_stocks)
         liste_six_month:list[pd.DataFrame] = App.utils.minmax_scale(30*6 , liste_stocks)
         liste_one_year:list[pd.DataFrame] = App.utils.minmax_scale(365 , liste_stocks)
         liste_five_year:list[pd.DataFrame] = App.utils.minmax_scale(365*5 , liste_stocks)
@@ -280,65 +282,11 @@ class App:
 
 
         # Add the traces
-        for list_ in (liste_two_week, liste_one_month,  liste_six_month, liste_one_year, liste_five_year):
+        for list_ in (liste_two_week, liste_one_month, liste_three_month,  liste_six_month, liste_one_year, liste_five_year):
             App.viz.add_a_trace_main_fig(list_ , fig=fig , tickers=tickers)
 
 
-        labels = (
-            "2WTD",
-            "1MTD",
-            "6MTD",
-            "1YTD",
-            "5YTD"
-        )
-
-        n_time_period = len(labels)
-
-        first_n_false = 1
-        last_n_false = n_time_period-1
-
-        legend_only_templ = ['legendonly' for i in range(len(tickers) - 1)]
-
-        results = {
-            
-                "ALL" : [ 
-                    *['legendonly' for i in range(len(tickers) - 1)],
-                    *[False for i in range(len(tickers)*5)],
-                    True,
-                ] , 
-                
-
-                }
-
-        for label in labels:
-
-            
-            result = [ 
-
-                *[False for i in range(len(tickers) * first_n_false)] , 
-                *legend_only_templ, 
-                True,
-                *[False for i in range(len(tickers) * last_n_false)]
-            ]
-            
-
-            first_n_false += 1
-            last_n_false -= 1
-
-            
-
-            results[label] = result
-
-
-        # Create the buttons
-        dropdown_buttons = [
-        {'label': "ALL", 'method': "update", 'args': [{"visible": results["ALL"]} , {'title' : 'Overall normalized stock prices'}]},
-        {'label': "2WTD", 'method': "update", 'args': [{"visible": results["2WTD"]} , {'title' : 'Two weeks normalized stock prices'}]},
-        {'label': "1MTD", 'method': "update", 'args': [{"visible": results["1MTD"]} , {'title' : 'One month normalized stock prices'}]},
-        {'label': "6MTD", 'method': "update", 'args': [{"visible": results["6MTD"]} , {'title' : 'Six months normalized stock prices'}]},
-        {'label': "1YTD", 'method': "update", 'args': [{"visible": results["1YTD"]} , {'title' : 'One year normalized stock prices'}]},
-        {'label': "5YTD", 'method': "update", 'args': [{"visible":results["5YTD"]} , {'title' : 'Five years normalized stock prices'}]}
-        ]
+        dropdown_buttons = DfSubsetter().get_legend_arguments_main(len_tickers=len(tickers))
 
         # Update the figure to add dropdown menu
         fig.update_layout({

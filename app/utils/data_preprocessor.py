@@ -1,5 +1,6 @@
 from typing import Dict
 import datetime
+import copy
 
 import pandas as pd 
 
@@ -11,6 +12,7 @@ class DfSubsetter:
     """
 
     MINUS_TIME_PERIOD = (14, 30, 30*3, 30*6, 365, 365*5)
+    TIME_PERIOD_LABELS_MAIN = ("ALL" , "2WTD", "1MTD", "3MTD", "6MTD", "1YTD", "5YTD")
     TIME_PERIOD_LABELS = ("2WTD", "1MTD", "3MTD", "6MTD", "1YTD", "5YTD")
 
     
@@ -32,19 +34,51 @@ class DfSubsetter:
 
         return results    
     
+
     @staticmethod
-    def get_legend_arguments(title:str , len_tickers:int) -> dict:
-        
+    def get_legend_argument_all_figs():
+
         n_time_period = len(DfSubsetter.TIME_PERIOD_LABELS)
 
-        first_n_false = 1
+        results = {}
+
+        pointer = 0
+
+        base_list_visible = [False for i in range(n_time_period)]
+        while pointer < n_time_period:
+
+            base_list_visible_label = copy.deepcopy(base_list_visible)
+            base_list_visible_label[pointer] = True
+            label = DfSubsetter.TIME_PERIOD_LABELS[pointer]
+            results[label] = base_list_visible_label
+
+            pointer += 1 
+
+        return results
+
+
+    @staticmethod
+    def get_legend_arguments_main(len_tickers:int) -> dict:
+        
+        n_time_period = len(DfSubsetter.TIME_PERIOD_LABELS_MAIN)
+
+        first_n_false = 0
         last_n_false = n_time_period-1
 
         legend_only_templ = ['legendonly' for i in range(len_tickers - 1)]
 
-        results = {}
+        results = {
+            
+                "ALL" : [ 
+                    *['legendonly' for i in range(len_tickers - 1)],
+                    *[False for i in range(len_tickers*5)],
+                    True,
+                ] , 
+                
 
-        for label in DfSubsetter.TIME_PERIOD_LABELS:
+                }
+
+        for label in DfSubsetter.TIME_PERIOD_LABELS_MAIN:
 
             
             result = [ 
@@ -65,12 +99,14 @@ class DfSubsetter:
 
         # Create the buttons
         return  [
-                {'label': "2WTD", 'method': "update", 'args': [{"visible": results["2WTD"]} , {'title' : f'Two weeks {title}'}]},
-                {'label': "1MTD", 'method': "update", 'args': [{"visible": results["1MTD"]} , {'title' : f'One month {title}'}]},
-                {'label': "3MTD", 'method': "update", 'args': [{"visible": results["3MTD"]} , {'title' : f'Three months {title}'}]},
-                {'label': "6MTD", 'method': "update", 'args': [{"visible": results["6MTD"]} , {'title' : f'Six months {title}'}]},
-                {'label': "1YTD", 'method': "update", 'args': [{"visible": results["1YTD"]} , {'title' : f'One year {title}'}]},
-                {'label': "5YTD", 'method': "update", 'args': [{"visible":results["5YTD"]} , {'title' : f'Five years {title}'}]}
-                ]
 
+                {'label': "ALL", 'method': "update", 'args': [{"visible": results["ALL"]} , {'title' : f'Overall normalized stock prices'}]},
+                {'label': "2WTD", 'method': "update", 'args': [{"visible": results["2WTD"]} , {'title' : f'Two weeks normalized stock prices'}]},
+                {'label': "1MTD", 'method': "update", 'args': [{"visible": results["1MTD"]} , {'title' : f'One month normalized stock prices'}]},
+                {'label': "3MTD", 'method': "update", 'args': [{"visible": results["3MTD"]} , {'title' : f'Three months normalized stock prices'}]},
+                {'label': "6MTD", 'method': "update", 'args': [{"visible": results["6MTD"]} , {'title' : f'Six months normalized stock prices'}]},
+                {'label': "1YTD", 'method': "update", 'args': [{"visible": results["1YTD"]} , {'title' : f'One year normalized stock prices'}]},
+                {'label': "5YTD", 'method': "update", 'args': [{"visible":results["5YTD"]} , {'title' : f'Five years normalized stock prices'}]}
+                ]
     
+
