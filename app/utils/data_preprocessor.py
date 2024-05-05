@@ -11,9 +11,9 @@ class DfSubsetter:
     The purpose of this class is to preprocess data for the viz (susbet the dataframes and prepare the 'legend_only' dict)
     """
 
-    MINUS_TIME_PERIOD = (14, 30, 30*3, 30*6, 365, 365*5)
     TIME_PERIOD_LABELS_MAIN = ("ALL" , "2WTD", "1MTD", "3MTD", "6MTD", "1YTD", "5YTD")
-    TIME_PERIOD_LABELS = ("2WTD", "1MTD", "3MTD", "6MTD", "1YTD", "5YTD")
+    MINUS_TIME_PERIOD = (30*3, 30*5, 30*7, 365, 365*5)
+    TIME_PERIOD_LABELS = ("2MTD", "4MTD", "6MTD", "1YTD", "5YTD")
 
     
     @staticmethod

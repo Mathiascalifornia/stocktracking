@@ -1,4 +1,4 @@
-########## Imports ##########
+from typing import Dict
 import datetime as dt 
 import warnings
 
@@ -22,42 +22,116 @@ from utils.data_preprocessor import DfSubsetter
 class Viz:
 
 
-
-
     @staticmethod
-    def plot_rsi(df : pd.DataFrame) -> go.Figure:
+    def plot_rsi(df_subseted: Dict[str, pd.DataFrame]) -> go.Figure:
         """ 
-        Plot the Relative Strenght Index figure 
+        Plot the Relative Strength Index figure.
+
+        Args:
+            df_subseted (Dict[str, pd.DataFrame]): A dictionary containing subsets of DataFrame.
+
+        Returns:
+            go.Figure: A plotly Figure object representing the RSI figure.
         """
 
+        # Initialize a new Plotly figure
+        fig = go.Figure()
 
-        df['RSI'] = ta.RSI(df['Adj Close'])
+        # Add horizontal lines for RSI thresholds
+        fig.add_hline(y=70, line_color='red')
+        fig.add_hline(y=30, line_color='green')
 
-        # We'll do that with simple buttons
-        df['RSI'] = ta.RSI(df['Adj Close'])
+        # Initialize the default label to None
+        default_label = None
+
+        # Iterate through the subsets of DataFrame
+        for label, df in df_subseted.items():
+            # Calculate the Relative Strength Index (RSI) for each subset
+            df["RSI"] = ta.RSI(df['Adj Close'])
+
+            # Set visibility based on whether the label matches the default label
+            visible = True if label == "5YTD" else False
+
+            # If visible, set the default label
+            if visible:
+                default_label = label  
+
+            # Add RSI data as a scatter plot
+            fig.add_trace(go.Scatter(x=df.index, y=df["RSI"], mode='lines', name=label, visible=visible))
+        
+        # Get legend arguments
+        legend_arguments = DfSubsetter.get_legend_argument_all_figs()
+
+        # Initialize legend buttons list
+        legend_buttons = []
+
+        # Create legend buttons for each label
+        for label, button_values in legend_arguments.items():
+            button = {
+                'args': [{'visible': button_values}],  
+                'label': label,
+                'method': 'update'            
+            }
+            legend_buttons.append(button)
+
+        # Find the index of the default label in the legend buttons list
+        default_index = [button['label'] for button in legend_buttons].index(default_label)
+
+        # Update layout with dropdown menu for legend
+        fig.update_layout({
+            'updatemenus': [
+                {
+                    'type': "dropdown",
+                    'showactive': True,
+                    'active': default_index, 
+                    'buttons': legend_buttons
+                }
+            ]
+        })
+
+        # Update layout for better hover interactions
+        fig.update_layout(hovermode='x unified')
+
+        # Set the figure size
+        fig.update_layout(autosize=False, width=800, height=500)
+
+        return fig
 
 
-        figure = px.line(df[df.index[-1] - dt.timedelta(252*5) :]['RSI'])
-        figure.add_hline(y=70 , line_color='red')
-        figure.add_hline(y=30  ,line_color='green')
+    # @staticmethod
+    # def plot_rsi(df : pd.DataFrame) -> go.Figure:
+    #     """ 
+    #     Plot the Relative Strenght Index figure 
+    #     """
 
-        buttons = [
-        {'count': 15, 'label': "3WTD", 'step': 'day', 'stepmode': 'todate'},
-        {'count': 21*6, 'label': "6MTD", 'step': 'day', 'stepmode': 'todate'},
-        {'count': 252*5, 'label': "5YTD", 'step': 'day', 'stepmode': 'todate'}
-        ]
 
-        figure.update_layout({'xaxis' : {'rangeselector' : {'buttons' : buttons}}})
-        figure.update_layout(width=1420 , height=500)
-        figure.update_layout(
-                    title={
-                        'text': "RSI",
-                        'y':0.99,
-                        'x':0.5,
-                        'xanchor': 'center',
-                        'yanchor': 'top'})
-        figure.update_layout(xaxis_title='')
-        return figure
+    #     df['RSI'] = ta.RSI(df['Adj Close'])
+
+    #     # We'll do that with simple buttons
+    #     df['RSI'] = ta.RSI(df['Adj Close'])
+
+
+    #     figure = px.line(df[df.index[-1] - dt.timedelta(252*5) :]['RSI'])
+    #     figure.add_hline(y=70 , line_color='red')
+    #     figure.add_hline(y=30  ,line_color='green')
+
+    #     buttons = [
+    #     {'count': 15, 'label': "3WTD", 'step': 'day', 'stepmode': 'todate'},
+    #     {'count': 21*6, 'label': "6MTD", 'step': 'day', 'stepmode': 'todate'},
+    #     {'count': 252*5, 'label': "5YTD", 'step': 'day', 'stepmode': 'todate'}
+    #     ]
+
+    #     figure.update_layout({'xaxis' : {'rangeselector' : {'buttons' : buttons}}})
+    #     figure.update_layout(width=1420 , height=500)
+    #     figure.update_layout(
+    #                 title={
+    #                     'text': "RSI",
+    #                     'y':0.99,
+    #                     'x':0.5,
+    #                     'xanchor': 'center',
+    #                     'yanchor': 'top'})
+    #     figure.update_layout(xaxis_title='')
+    #     return figure
 
 
     @staticmethod
@@ -79,47 +153,135 @@ class Viz:
         return fig
 
 
-
     @staticmethod
-    def bbands(df : pd.DataFrame) -> go.Figure: 
-        ''' Plot the bollinger bands figure '''   
-        df_ = df[(df.index[-1] - dt.timedelta(365*5)):]
+    def bbands(df_subseted: Dict[str, pd.DataFrame], legend_arguments: dict) -> go.Figure:
+        """ 
+        Plot the Bollinger Bands figure with legend buttons.
 
+        Args:
+            df_subseted (Dict[str, pd.DataFrame]): A dictionary containing subsets of DataFrame.
+            legend_arguments (dict): A dictionary containing arguments for legend buttons.
+
+        Returns:
+            go.Figure: A plotly Figure object representing the Bollinger Bands figure.
+        """
+        # Initialize a new Plotly figure
         fig = go.Figure()
-        fig.add_trace(go.Scatter(y=df_['Adj Close'] , x=df_.index , mode='lines' , fillcolor='blue' , name='Price'))
 
-        # Define the Bollinger Bands with 2-sd
-        upper_2sd, mid_2sd, lower_2sd = ta.BBANDS(df_['Adj Close'],
-                                                    nbdevup=2,
-                                                    nbdevdn=2,
-                                                    timeperiod=20)
+        # Initialize lists to store scatter plot traces and buttons
+        scatter_traces = []
 
-        upper_2sd = pd.DataFrame(upper_2sd)
-        mid_2sd = pd.DataFrame(mid_2sd)
-        lower_2sd = pd.DataFrame(lower_2sd)
+        for label, df in df_subseted.items():
+            # Calculate Bollinger Bands
+            upper_2sd, mid_2sd, lower_2sd = ta.BBANDS(df['Adj Close'],
+                                                        nbdevup=2,
+                                                        nbdevdn=2,
+                                                        timeperiod=20)
+            
+            visible = True if label == "5YTD" else False
 
-        fig.add_trace(go.Scatter(x=upper_2sd.index , y=upper_2sd[0] , line=dict(color='rgb(255,0,0)') , name='Upper band') )
-        fig.add_trace(go.Scatter(x=mid_2sd.index , y=mid_2sd[0] , line=dict(color='rgb(0,255,0)') , name='SMA 20'))
-        fig.add_trace(go.Scatter(x=lower_2sd.index , y=lower_2sd[0] , line=dict(color='rgb(255,0,0)') , name='Lower band'))
+            # If visible, set the default label
+            if visible:
+                default_label = label  
 
-        buttons = [
-        {'count': 31, 'label': "1MTD", 'step': 'day', 'stepmode': 'todate'},
-        {'count' : 365 , 'label' : '1YTD' , 'step' : 'day' , 'stepmode' : 'todate'},
-        {'count' : 365*5 , 'label' : '5YTD' , 'step' : 'day' , 'stepmode' : 'todate'}
-            ]
 
-        fig.update_layout({'xaxis' : {'rangeselector' : {'buttons' : buttons}}})
-        fig.update_layout(hovermode = 'x unified')
-        fig.update_layout(width=1465 , height=500)
-        fig.update_layout(
-                    title={
-                        'text': "Bollinger Bands",
-                        'y':0.9,
-                        'x':0.5,
-                        'xanchor': 'center',
-                        'yanchor': 'top'})
+            scatter_traces.append(go.Scatter(x=df.index, y=df['Adj Close'], line=dict(color='limegreen'), name=f'Upper band - {label}', visible=visible))
+
+            # Add scatter plot traces for Bollinger Bands
+            scatter_traces.append(go.Scatter(x=df.index, y=upper_2sd, line=dict(color='red'), name=f'Upper band - {label}', visible=visible))
+            scatter_traces.append(go.Scatter(x=df.index, y=mid_2sd, line=dict(color='blue'), name=f'SMA 20 - {label}', visible=visible))
+            scatter_traces.append(go.Scatter(x=df.index, y=lower_2sd, line=dict(color='red'), name=f'Lower band - {label}', visible=visible))
+
+        # Add all scatter plot traces to the figure
+        for trace in scatter_traces:
+            fig.add_trace(trace)
+
+
+        # Initialize legend buttons list
+        legend_buttons = []
+
+        # Create legend buttons for each label
+        for label, button_values in legend_arguments.items():
+            button = {
+                'args': [{'visible': button_values}],  
+                'label': label,
+                'method': 'update'            
+            }
+            legend_buttons.append(button)
+
+
+        # Find the index of the default label in the legend buttons list
+        default_index = [button['label'] for button in legend_buttons].index(default_label)
+
+
+        # Create buttons for legend
+        buttons = []
+        for label in legend_arguments:
+            button_args = [False] * len(df_subseted) * 4
+            button_args[list(df_subseted.keys()).index(label) * 4:list(df_subseted.keys()).index(label) * 4 + 4] = [True] * 4
+
+            buttons.append(dict(label=label,
+                                method='update',
+                                args=[{'visible': button_args}]))
+
+        # Add buttons to the figure layout
+        fig.update_layout(updatemenus=[{'buttons': buttons,
+                                        'direction': 'down',
+                                        'showactive': True,
+                                        'active': default_index, 
+                                        'yanchor': 'top'}])
+        
+
+        # Update layout for better hover interactions
+        fig.update_layout(hovermode='x unified')
 
         return fig
+
+
+
+
+
+
+    # @staticmethod
+    # def bbands(df : pd.DataFrame) -> go.Figure: 
+    #     ''' Plot the bollinger bands figure '''   
+    #     df_ = df[(df.index[-1] - dt.timedelta(365*5)):]
+
+    #     fig = go.Figure()
+    #     fig.add_trace(go.Scatter(y=df_['Adj Close'] , x=df_.index , mode='lines' , fillcolor='blue' , name='Price'))
+
+    #     # Define the Bollinger Bands with 2-sd
+    #     upper_2sd, mid_2sd, lower_2sd = ta.BBANDS(df_['Adj Close'],
+    #                                                 nbdevup=2,
+    #                                                 nbdevdn=2,
+    #                                                 timeperiod=20)
+
+    #     upper_2sd = pd.DataFrame(upper_2sd)
+    #     mid_2sd = pd.DataFrame(mid_2sd)
+    #     lower_2sd = pd.DataFrame(lower_2sd)
+
+    #     fig.add_trace(go.Scatter(x=upper_2sd.index , y=upper_2sd[0] , line=dict(color='rgb(255,0,0)') , name='Upper band') )
+    #     fig.add_trace(go.Scatter(x=mid_2sd.index , y=mid_2sd[0] , line=dict(color='rgb(0,255,0)') , name='SMA 20'))
+    #     fig.add_trace(go.Scatter(x=lower_2sd.index , y=lower_2sd[0] , line=dict(color='rgb(255,0,0)') , name='Lower band'))
+
+    #     buttons = [
+    #     {'count': 31, 'label': "1MTD", 'step': 'day', 'stepmode': 'todate'},
+    #     {'count' : 365 , 'label' : '1YTD' , 'step' : 'day' , 'stepmode' : 'todate'},
+    #     {'count' : 365*5 , 'label' : '5YTD' , 'step' : 'day' , 'stepmode' : 'todate'}
+    #         ]
+
+    #     fig.update_layout({'xaxis' : {'rangeselector' : {'buttons' : buttons}}})
+    #     fig.update_layout(hovermode = 'x unified')
+    #     fig.update_layout(width=1465 , height=500)
+    #     fig.update_layout(
+    #                 title={
+    #                     'text': "Bollinger Bands",
+    #                     'y':0.9,
+    #                     'x':0.5,
+    #                     'xanchor': 'center',
+    #                     'yanchor': 'top'})
+
+    #     return fig
 
 
     @staticmethod
