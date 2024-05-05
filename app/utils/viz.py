@@ -23,7 +23,8 @@ class Viz:
 
 
     @staticmethod
-    def plot_rsi(df_subseted: Dict[str, pd.DataFrame]) -> go.Figure:
+    def plot_rsi(df_subseted: Dict[str, pd.DataFrame],
+                 legend_arguments:dict) -> go.Figure:
         """ 
         Plot the Relative Strength Index figure.
 
@@ -59,8 +60,6 @@ class Viz:
             # Add RSI data as a scatter plot
             fig.add_trace(go.Scatter(x=df.index, y=df["RSI"], mode='lines', name=label, visible=visible))
         
-        # Get legend arguments
-        legend_arguments = DfSubsetter.get_legend_argument_all_figs()
 
         # Initialize legend buttons list
         legend_buttons = []
@@ -92,8 +91,13 @@ class Viz:
         # Update layout for better hover interactions
         fig.update_layout(hovermode='x unified')
 
-        # Set the figure size
-        fig.update_layout(autosize=False, width=800, height=500)
+        fig.update_layout(
+                    title={
+                        'text': "RSI",
+                        'y':0.99,
+                        'x':0.5,
+                        'xanchor': 'center',
+                        'yanchor': 'top'})
 
         return fig
 
@@ -234,6 +238,14 @@ class Viz:
 
         # Update layout for better hover interactions
         fig.update_layout(hovermode='x unified')
+
+        fig.update_layout(
+                    title={
+                        'text': "Bollinger Bands",
+                        'y':0.99,
+                        'x':0.5,
+                        'xanchor': 'center',
+                        'yanchor': 'top'})
 
         return fig
 

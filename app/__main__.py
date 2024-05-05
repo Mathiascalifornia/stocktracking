@@ -3,7 +3,7 @@ import os
 from threading import Timer
 import warnings
 import logging
-from typing import List , Iterable
+from typing import List , Iterable, Dict
 
 
 import pandas as pd
@@ -59,6 +59,8 @@ class App:
                            "Information Technology" : ("^SP500-45",) , 
                            "Communication Services" : ("^SP500-50",) , 
                            "Real Estate" : ("^SP500-60",)}
+    
+    legend_arguments:dict = DfSubsetter().get_legend_argument_all_figs()
 
     def __init__(self):
 
@@ -188,8 +190,10 @@ class App:
         Output(component_id='RSI' , component_property='figure'),
         Input(component_id='first_dropdown' , component_property='value'))
         def change_rsi_fig(input_ticker):
-                if input_ticker:
-                    return App.viz.plot_rsi(self.ticker_df_dict.get(input_ticker))
+            if input_ticker:
+                df = self.ticker_df_dict.get(input_ticker)
+                df_subsetted = DfSubsetter().get_df_subsets_dict(df=df)
+                return App.viz.plot_rsi(df_subseted=df_subsetted, legend_arguments=App.legend_arguments)
 
 
         # For the volume plot
@@ -206,16 +210,18 @@ class App:
         Output(component_id='bbands' , component_property='figure'),
         Input(component_id='first_dropdown' , component_property='value'))
         def change_bbands(input_ticker):
-                if input_ticker:
-                    return App.viz.bbands(self.ticker_df_dict.get(input_ticker))
+            if input_ticker:
+                df = self.ticker_df_dict.get(input_ticker)
+                df_subsetted = DfSubsetter().get_df_subsets_dict(df=df)
+                return App.viz.bbands(df_subseted=df_subsetted, legend_arguments=App.legend_arguments)
                             
         # For the adx figure
         @self.app.callback(
         Output(component_id='adx' , component_property='figure'),
         Input(component_id='first_dropdown' , component_property='value'))
-        def change_bbands(input_ticker):
-                if input_ticker:
-                    return App.viz.plot_candle_adx(self.ticker_df_dict.get(input_ticker))
+        def change_adx(input_ticker):
+            if input_ticker:
+                return App.viz.plot_candle_adx(self.ticker_df_dict.get(input_ticker))
 
         # For the macd figure
         @self.app.callback(
@@ -267,6 +273,7 @@ class App:
         liste_one_year:list[pd.DataFrame] = App.utils.minmax_scale(365 , liste_stocks)
         liste_five_year:list[pd.DataFrame] = App.utils.minmax_scale(365*5 , liste_stocks)
 
+        subsetted_sp500:Dict[pd.DataFrame] = DfSubsetter().get_df_subsets_dict(df=sp500)
 
         fig = go.Figure()
 
@@ -346,9 +353,10 @@ class App:
         # Title for the RSI fig
         html.H3(children=[f'RSI , Bollinger bands , ADX , MACD , trading volume and analysis of seasonality for SP500 :'] , id='title'),
 
+        
         # Figures
-        dcc.Graph(id='RSI' , figure=App.viz.plot_rsi(sp500)),
-        dcc.Graph(id='bbands' , figure=App.viz.bbands(sp500)),
+        dcc.Graph(id='RSI' , figure=App.viz.plot_rsi(df_subseted=subsetted_sp500, legend_arguments=App.legend_arguments)),
+        dcc.Graph(id='bbands' , figure=App.viz.bbands(df_subseted=subsetted_sp500, legend_arguments=App.legend_arguments)),
         dcc.Graph(id='adx' , figure=App.viz.plot_candle_adx(sp500)),
         dcc.Graph(id='macd' , figure=App.viz.plot_macd(sp500)),
         dcc.Graph(id='volume' , figure=App.viz.plot_volume(sp500)),
